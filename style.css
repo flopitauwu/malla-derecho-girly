@@ -1,0 +1,49 @@
+body {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  background-color: #ffe6f2;
+  color: #5c004d;
+  text-align: center;
+  padding: 20px;
+}
+
+h1 {
+  background-color: #ffcce0;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+#malla-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.semestre {
+  background-color: #fff0f5;
+  border: 2px dashed #ff69b4;
+  border-radius: 15px;
+  padding: 15px;
+  width: 250px;
+  min-height: 300px;
+}
+
+.semestre h2 {
+  color: #d63384;
+}
+
+.ramo {
+  background: #fff;
+  margin: 5px;
+  padding: 8px;
+  border: 1px solid #d63384;
+  border-radius: 10px;
+  cursor: grab;
+  transition: background 0.3s;
+}
+
+.ramo.aprobado {
+  text-decoration: line-through;
+  background-color: #e6e6e6;
+  color: #999;
+}
