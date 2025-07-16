@@ -1,3 +1,6 @@
+// Intenta cargar los ramos guardados
+let ramosGuardados = JSON.parse(localStorage.getItem("ramosGuardados")) || {};
+
 const semestres = [
   { nombre: "01 SEMESTRE", ramos: [
     "Historia del Pensamiento Político y Teoría del Estado",
@@ -18,51 +21,155 @@ const semestres = [
     "Inglés 2",
     "Ética Cristiana"
   ]},
-  // Puedes seguir agregando más semestres aquí
+  { nombre: "03 SEMESTRE", ramos: [
+    "Derecho Constitucional Orgánico",
+    "Derecho Internacional Público",
+    "Negocio Jurídico",
+    "Tutela Judicial Efectiva y Debido Proceso",
+    "Estrategias de Producción del Discurso Oral",
+    "Taller de Memoria 2",
+    "Inglés 3"
+  ]},
+  { nombre: "04 SEMESTRE", ramos: [
+    "Derechos Fundamentales",
+    "Bienes",
+    "Disposiciones Comunes a Todo Procedimiento",
+    "Teoría del Delito",
+    "Formación Fundamental 3",
+    "Inglés 4"
+  ]},
+  { nombre: "05 SEMESTRE", ramos: [
+    "Bases del Derecho Administrativo",
+    "Derecho Individual del Trabajo",
+    "Derecho y Orden Económico",
+    "Obligaciones y Contratos",
+    "Juicio Declarativo y Prueba",
+    "Responsabilidad Penal",
+    "Taller de Memoria 3",
+    "Formación Fundamental 4",
+    "Optativo 1"
+  ]},
+  { nombre: "06 SEMESTRE", ramos: [
+    "Actuación de la Administración del Estado",
+    "Derecho Colectivo del Trabajo",
+    "Regulación Económica y Derecho de la Libre Competencia",
+    "Responsabilidad Civil",
+    "Recursos Procesales",
+    "Delito Contra Intereses Individuales",
+    "Enseñanza Clínica del Derecho: Negociación y Formas Autocompositivas",
+    "Optativo 2"
+  ]},
+  { nombre: "07 SEMESTRE", ramos: [
+    "Control y Responsabilidad de la Administración del Estado",
+    "Introducción al Derecho Comercial y Organización Jurídica de la Empresa",
+    "Derecho de los Mercados Financieros",
+    "Contratos en Particular",
+    "Ejecución y Tutela Cautelar",
+    "Taller de Memoria 4",
+    "Optativo 3"
+  ]},
+  { nombre: "08 SEMESTRE", ramos: [
+    "Derecho Tributario",
+    "Sociedades de Capital",
+    "Teoría del Ordenamiento Jurídico",
+    "Familia",
+    "Derecho Procesal Penal",
+    "Enseñanza Clínica: Litigación Oral",
+    "Formación Fundamental 5"
+  ]},
+  { nombre: "09 SEMESTRE", ramos: [
+    "Enseñanza Clínica: Pasantía Profesional",
+    "Derecho Concursal y de Seguros",
+    "Filosofía del Derecho y Teorías de la Justicia",
+    "Sucesiones",
+    "Ética Profesional",
+    "Memoria"
+  ]},
+  { nombre: "10 SEMESTRE", ramos: [
+    "Licenciatura"
+  ]}
 ];
+
+function guardarRamos() {
+  const todosRamos = document.querySelectorAll(".ramo");
+  const data = {};
+  document.querySelectorAll(".semestre").forEach(sem => {
+    const id = sem.getAttribute("id");
+    const ramos = [];
+    sem.querySelectorAll(".ramo").forEach(ramo => {
+      ramos.push({
+        texto: ramo.textContent,
+        aprobado: ramo.classList.contains("aprobado")
+      });
+    });
+    data[id] = ramos;
+  });
+  localStorage.setItem("ramosGuardados", JSON.stringify(data));
+}
 
 function crearMalla() {
   const container = document.getElementById("malla-container");
+  container.innerHTML = "";
 
   semestres.forEach((sem, idx) => {
     const div = document.createElement("div");
     div.classList.add("semestre");
+    const id = `sem-${idx}`;
+    div.setAttribute("id", id);
     div.innerHTML = `<h2>${sem.nombre}</h2>`;
-    div.id = `sem-${idx}`;
 
-    sem.ramos.forEach((ramo, r) => {
+    const ramos = ramosGuardados[id] || sem.ramos.map(t => ({ texto: t, aprobado: false }));
+
+    ramos.forEach((ramoInfo) => {
       const ramoDiv = document.createElement("div");
       ramoDiv.classList.add("ramo");
+      ramoDiv.textContent = ramoInfo.texto;
+      if (ramoInfo.aprobado) ramoDiv.classList.add("aprobado");
       ramoDiv.draggable = true;
-      ramoDiv.textContent = ramo;
 
-      // Evento para marcar como aprobado
       ramoDiv.addEventListener("click", () => {
         ramoDiv.classList.toggle("aprobado");
+        guardarRamos();
       });
 
-      // Drag and Drop
       ramoDiv.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", ramoDiv.outerHTML);
+        e.dataTransfer.setData("text/plain", JSON.stringify({
+          texto: ramoDiv.textContent,
+          aprobado: ramoDiv.classList.contains("aprobado")
+        }));
         ramoDiv.remove();
+        guardarRamos();
       });
 
       div.appendChild(ramoDiv);
     });
 
-    // Permitir soltar
     div.addEventListener("dragover", (e) => e.preventDefault());
     div.addEventListener("drop", (e) => {
       e.preventDefault();
-      const data = e.dataTransfer.getData("text/plain");
-      const dropZone = e.target.closest(".semestre");
-      if (dropZone) {
-        dropZone.insertAdjacentHTML("beforeend", data);
-        const nuevosRamos = dropZone.querySelectorAll(".ramo");
-        nuevosRamos.forEach(ramo => {
-          ramo.addEventListener("click", () => ramo.classList.toggle("aprobado"));
-        });
-      }
+      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+      const nuevoRamo = document.createElement("div");
+      nuevoRamo.classList.add("ramo");
+      nuevoRamo.textContent = data.texto;
+      if (data.aprobado) nuevoRamo.classList.add("aprobado");
+      nuevoRamo.draggable = true;
+
+      nuevoRamo.addEventListener("click", () => {
+        nuevoRamo.classList.toggle("aprobado");
+        guardarRamos();
+      });
+
+      nuevoRamo.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", JSON.stringify({
+          texto: nuevoRamo.textContent,
+          aprobado: nuevoRamo.classList.contains("aprobado")
+        }));
+        nuevoRamo.remove();
+        guardarRamos();
+      });
+
+      div.appendChild(nuevoRamo);
+      guardarRamos();
     });
 
     container.appendChild(div);
