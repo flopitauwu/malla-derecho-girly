@@ -1,4 +1,3 @@
-// Intenta cargar los ramos guardados
 let ramosGuardados = JSON.parse(localStorage.getItem("ramosGuardados")) || {};
 
 const semestres = [
@@ -91,10 +90,9 @@ const semestres = [
 ];
 
 function guardarRamos() {
-  const todosRamos = document.querySelectorAll(".ramo");
   const data = {};
   document.querySelectorAll(".semestre").forEach(sem => {
-    const id = sem.getAttribute("id");
+    const id = sem.id;
     const ramos = [];
     sem.querySelectorAll(".ramo").forEach(ramo => {
       ramos.push({
@@ -105,6 +103,29 @@ function guardarRamos() {
     data[id] = ramos;
   });
   localStorage.setItem("ramosGuardados", JSON.stringify(data));
+}
+
+function crearRamo(ramoInfo) {
+  const ramoDiv = document.createElement("div");
+  ramoDiv.classList.add("ramo");
+  ramoDiv.textContent = ramoInfo.texto;
+  if (ramoInfo.aprobado) ramoDiv.classList.add("aprobado");
+  ramoDiv.draggable = true;
+
+  ramoDiv.addEventListener("click", () => {
+    ramoDiv.classList.toggle("aprobado");
+    guardarRamos();
+  });
+
+  ramoDiv.addEventListener("dragstart", (e) => {
+    e.dataTransfer.setData("ramo", JSON.stringify({
+      texto: ramoDiv.textContent,
+      aprobado: ramoDiv.classList.contains("aprobado")
+    }));
+    // NO lo borramos aquí
+  });
+
+  return ramoDiv;
 }
 
 function crearMalla() {
@@ -120,54 +141,17 @@ function crearMalla() {
 
     const ramos = ramosGuardados[id] || sem.ramos.map(t => ({ texto: t, aprobado: false }));
 
-    ramos.forEach((ramoInfo) => {
-      const ramoDiv = document.createElement("div");
-      ramoDiv.classList.add("ramo");
-      ramoDiv.textContent = ramoInfo.texto;
-      if (ramoInfo.aprobado) ramoDiv.classList.add("aprobado");
-      ramoDiv.draggable = true;
-
-      ramoDiv.addEventListener("click", () => {
-        ramoDiv.classList.toggle("aprobado");
-        guardarRamos();
-      });
-
-      ramoDiv.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", JSON.stringify({
-          texto: ramoDiv.textContent,
-          aprobado: ramoDiv.classList.contains("aprobado")
-        }));
-        ramoDiv.remove();
-        guardarRamos();
-      });
-
+    ramos.forEach(ramoInfo => {
+      const ramoDiv = crearRamo(ramoInfo);
       div.appendChild(ramoDiv);
     });
 
     div.addEventListener("dragover", (e) => e.preventDefault());
+
     div.addEventListener("drop", (e) => {
       e.preventDefault();
-      const data = JSON.parse(e.dataTransfer.getData("text/plain"));
-      const nuevoRamo = document.createElement("div");
-      nuevoRamo.classList.add("ramo");
-      nuevoRamo.textContent = data.texto;
-      if (data.aprobado) nuevoRamo.classList.add("aprobado");
-      nuevoRamo.draggable = true;
-
-      nuevoRamo.addEventListener("click", () => {
-        nuevoRamo.classList.toggle("aprobado");
-        guardarRamos();
-      });
-
-      nuevoRamo.addEventListener("dragstart", (e) => {
-        e.dataTransfer.setData("text/plain", JSON.stringify({
-          texto: nuevoRamo.textContent,
-          aprobado: nuevoRamo.classList.contains("aprobado")
-        }));
-        nuevoRamo.remove();
-        guardarRamos();
-      });
-
+      const data = JSON.parse(e.dataTransfer.getData("ramo"));
+      const nuevoRamo = crearRamo(data);
       div.appendChild(nuevoRamo);
       guardarRamos();
     });
